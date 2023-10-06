@@ -2,7 +2,7 @@
 __This project aims to characterize coherent structures in LES.__  
 Git project creation in 2019  
 
-The goal of ...
+The project characterizes coherent structures in atmospheric boundary layers in Large-Eddy Simulations. Coherent structures are based on tracer concentrations emitted at the surface, cloud base and cloud top (or inversion top if clear-sky boundary layer). Thermodynamical and dynamical objects' fetaures are characterized only with their mass fluxes. Decoupling indexes are also computed. 
 
 The routines have been used in a peer-reviewed article :
 
@@ -13,7 +13,7 @@ Author : F. Brient
 ## Description
 
 ### Main directory
-The main repository contains this __README.md__ file and XX folders: __rename_netcdf__ and __scripts__.
+The main repository contains this __README.md__ file and 2 folders: __rename_netcdf__ and __scripts__.
 
 The main script is __exec_step.exe__, run as *./exec_step.exe 1 1 1 1 1*
 
