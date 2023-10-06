@@ -17,7 +17,11 @@ The main repository contains this __README.md__ file and XX folders: __rename_ne
 The main script is __exec_step.exe__, run as *./exec_step.exe 1 1 1 1 1*
 It calls the following routines:
 
-### script_rename_dim (*./exec_step.exe 1 0 0 0 0*)
+### 1. Rename variables
+The first call runs __script_rename_dim__ on the *rename_netcdf/* folder
+
+
+### 2. Object selection
 
 
 
