@@ -1,0 +1,86 @@
+#!/bin/bash
+
+select=$1
+object=$2
+plot=$3
+stat=$4
+diurnal=$5
+
+#path=/Users/florentbrient/Dropbox/MESO-NH/Github/objects-LES/
+# sxtropics
+path=`pwd`
+
+svt=(SVT001 SVT002 SVT003)
+vtyp='V0301'
+
+#case='IHOP';sens='Ru0x0';hour=('006') #('002','004','006','008')
+case='BOMEX';sens='Ru0x0';hour=('008') #('002','004','006','008','010','012')
+#case='FIRE';sens='Ls2x0';svt=(SVT004 SVT005 SVT006);hour=('003','006','009','012','015','018','021','024')
+#case='BOMEX';sens='Ru0NW';hour=('008') #('008','012',) #hour=('002','004','006','008','010','012')
+#case='ASTEX';sens='BIG07';hour=('018')
+#case='ARMCU';sens='Ru0x0';hour=('002','004','006','008','010')
+#case='RICO';sens='Ru0x0';hour=('002','004','006','008','010','012')
+#case='FIRE';sens='L2RA2';svt=(SVT004 SVT005 SVT006);hour=('006','012','018','024') #('006','012','018','021','024'); #hour=('003','006','009','012','015','018','021','024')
+#case='AYOTTE';sens='24Sx0';hour=('001','002','003','004','005','006','007')
+
+new_mnh=0
+# NEW MNH
+if [ $new_mnh = 1 ] ; then
+	vtyp='V0001'
+	svt=(SVT004 SVT005 SVT006)
+
+	#case='IHOPNW';sens='IHOP0';hour=('006');svt=(SVT004 SVT005 SVT006);vtyp='V0001'
+	#case='IHOP2D';sens='IHOP0';hour=('008');svt=(SVT004 SVT005 SVT006)
+	case='FIRENOWIND';sens='NWIND';hour=('012')
+	#case='FIREWIND';sens='WDFor';hour=('003','012')
+fi
+echo $svt
+
+if [ $select = 1 ] ; then
+echo 'Running selection variables...'
+cd $path/rename_netcdf
+if [ $new_mnh != 0] ; then
+	./script_rename_dim $case $sens $svt
+else
+	# NEW MNH
+	./script_rename_dim_new $case $sens $svt
+fi
+fi
+
+if [ $object = 1 ] ; then
+echo 'Running selection objects...'
+pathobj=../objects/script/
+pathobj=../../Dropbox/GitHub/objects/script
+cd $pathobj
+hours=${hour//,/' '}
+for hh in $hours
+do
+  file=${path}/data/${case}/${sens}/sel_${sens}.1.${vtyp}.${hh}.nc4
+  # Attention : New version
+  if [ $new_mnh = 1 ] ; then
+  	file=${path}/data/${case}/${sens}/sel_${sens}.1.${vtyp}.OUT.${hh}.nc
+  fi
+  python identify_downdrafts_and_updrafts.py updraft   ${svt[0]}+WT $file
+  python identify_downdrafts_and_updrafts.py downdraft ${svt[0]}+WT $file
+  #python identify_downdrafts_and_updrafts.py updraft   ${svt[1]}+WT $file
+  python identify_downdrafts_and_updrafts.py downdraft ${svt[1]}+WT $file
+  python identify_downdrafts_and_updrafts.py downdraft ${svt[2]}+WT $file
+done
+cd $path
+fi
+
+if [ $plot = 1 ] ; then
+echo 'Running plot...'
+cd $path
+./run_plot_LES_3D.sh $case $sens $hour $vtyp
+fi
+
+if [ $stat = 1 ] ; then
+echo 'Running stats...'
+./run_stats.sh $case $sens $hour ${svt[@]}
+fi
+
+if [ $diurnal = 1 ] ; then
+echo 'Running diurnal...'
+./run_diurnal.sh $case $sens $hour ${svt[@]}
+fi

@@ -1,0 +1,62 @@
+#!/bin/bash
+batch=1 ; export batch
+
+echo $1 $2
+
+pathdata='/Volumes/TOSHIBA/'$1'/'
+pathdata='/media/fbrient/TOSHIBA/'$1'/'
+pathdata='/home/fbrient/MNH/'$1'/'
+# sxtropics
+
+path='../data/'$1'/'$2'/'
+mkdir $path
+
+dirlist=`find ${pathdata}${2}* -not -name '*000.*' | xargs -n 1 basename`
+echo ${pathdata}${2}*
+echo $dirlist
+
+var=XHAT,YHAT,ZHAT,UT,VT,WT,PABST,RVT,RNPM,THT,THLM,SVT004,SVT005,SVT006,RCT #${3[0]},${3[1]},${3[2]}
+#SVT004,SVT005,SVT006 #,SVT004,SVT005,SVT006 #,SVT001,SVT002,SVT003
+#var=XHAT,YHAT,ZHAT,RRT,RCT,RNPM
+#var=XHAT,YHAT,ZHAT,RNPM
+
+var=ni,nj,level,ni_u,ni_v,nj_u,nj_v,level_w,PABST,RVT,THT,SVT004,SVT006,UT,VT,WT
+var2=PABST,RVT,THT,SVT004,SVT006,UT,VT,WT,RCT
+var=ni,nj,level,ni_u,ni_v,nj_u,nj_v,level_w,$var2
+
+for fich in $dirlist
+#for fich in IHOP0.1.V0002.OUT.002.nc
+do
+ echo $fich
+ echo "extract..."
+ ncks -O -6 -d ni,1,-2 -d nj,1,-2 -d level,1,-2 -v $var $pathdata$fich toto.nc
+ echo "rename..."
+ #echo "WRONG, but assume same grid for winds..."
+ ncrename -O -h -d ni,W_E_direction -d nj,S_N_direction -d level,vertical_levels -v ni,W_E_direction -v nj,S_N_direction -v level,vertical_levels toto.nc totob.nc
+ echo "modify..."
+ for vv in ${var2//,/ }
+ do
+ 	ncap2 -O -v -s $vv'='$vv'(0,:,:,:)' totob.nc 'totoc'$vv'.nc'
+	#'totoc'$vv'.nc'
+	ncks -A 'totoc'$vv'.nc' totoc.nc
+ done
+ 
+ # Interpolation W,V,W
+ python interp_MNH.py totoc.nc
+ ncks -C -O -x -v UT,VT,WT totoc.nc totod.nc
+ ncrename -h -O -v WTnew,WT -v UTnew,UT -v VTnew,VT totod.nc
+
+ file_final=$path'sel_'$fich
+ mv totod.nc $file_final
+ rm toto*
+done
+
+#ncap2 -A totob.nc $path'sel_'$fich
+
+
+# ncap2 -Ah -s "W_E_direction = .001*W_E_direction" -s "S_N_direction = .001*S_N_direction" -s "vertical_levels = 0.001*vertical_levels" totob.nc $path'sel_'$fich
+# echo "cut domain"
+# ncea -O -d W_E_direction,330,390 -d S_N_direction,140,200 toto.nc totob.nc
+# echo "extra var"
+# ncap2 -O -s 'rct_max=RCT.max($vertical_levels)' totob.nc $path'sel5_'$fich
+#done
